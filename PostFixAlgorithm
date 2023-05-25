@@ -1,0 +1,139 @@
+package TP04;
+
+import java.util.Stack;
+import java.util.StringTokenizer;
+
+class PostfixAlgorithm {
+    // Method to transform an infix expression to postfix
+    public static String transformToPostfix(String infix) {
+        Stack<Character> stack = new Stack<>(); // Stack to store operators
+        StringBuilder postfix = new StringBuilder(); // StringBuilder to build the postfix expression
+        StringTokenizer tokenizer = new StringTokenizer(infix, "+-*/^()", true); // Tokenizer to split the expression
+
+        while (tokenizer.hasMoreTokens()) {
+            String token = tokenizer.nextToken().trim(); // Get the next token
+
+            if (isOperand(token)) {
+                postfix.append(token).append(" "); // Append operand to the postfix expression
+            } else if (isOperator(token)) {
+                // Process operator
+                while (!stack.isEmpty() && stack.peek() != '(' && hasHigherPrecedence(stack.peek(), token.charAt(0))) {
+                    // Pop operators from the stack and append them to the postfix expression
+                    postfix.append(stack.pop()).append(" ");
+                }
+                stack.push(token.charAt(0)); // Push the current operator to the stack
+            } else if (token.equals("(")) {
+                stack.push('('); // Push opening parentheses to the stack
+            } else if (token.equals(")")) {
+                // Process closing parentheses
+                while (!stack.isEmpty() && stack.peek() != '(') {
+                    // Pop operators from the stack and append them to the postfix expression
+                    postfix.append(stack.pop()).append(" ");
+                }
+                if (!stack.isEmpty() && stack.peek() == '(') {
+                    stack.pop(); // Pop the opening parentheses from the stack
+                } else {
+                    InfixtoPostfixGenerator.errors.add("Missing opening parentheses");
+                }
+            } else {
+                InfixtoPostfixGenerator.errors.add("Unrecognized token: '" + token + "'");
+            }
+        }
+
+        while (!stack.isEmpty()) {
+            if (stack.peek() == '(') {
+                InfixtoPostfixGenerator.errors.add("Missing closing parentheses");
+                stack.pop(); // Pop the opening parentheses from the stack
+            } else {
+                // Pop remaining operators from the stack and append them to the postfix expression
+                postfix.append(stack.pop()).append(" ");
+            }
+        }
+
+        return postfix.toString(); // Return the postfix expression
+    }
+
+    // Method to evaluate a postfix expression
+    public static long evaluatePostfixExpression(String postfix) {
+        Stack<Long> stack = new Stack<>(); // Stack to store operands
+        StringTokenizer tokenizer = new StringTokenizer(postfix, " "); // Tokenizer to split the postfix expression
+
+        while (tokenizer.hasMoreTokens()) {
+            String token = tokenizer.nextToken();
+
+            if (isOperand(token)) {
+                stack.push(Long.parseLong(token)); // Push operand to the stack
+            } else if (isOperator(token)) {
+                if (stack.size() < 2) {
+                    InfixtoPostfixGenerator.errors.add("Not enough operands for operator: '" + token + "'");
+                } else {
+                    long b = stack.pop();
+                    long a = stack.pop();
+                    long result;
+                    if (token.equals("/") && b == 0) {
+                        result = a; // Set the result to the number before the division operand if the divisor is 0
+                        InfixtoPostfixGenerator.errors.add("Division by zero");
+                    } else {
+                        result = performOperation(a, b, token.charAt(0)); // Perform the operation on operands
+                    }
+                    stack.push(result); // Push the result back to the stack
+                }
+            } else {
+                InfixtoPostfixGenerator.errors.add("Unrecognized token: '" + token + "'");
+            }
+        }
+
+        if (stack.isEmpty()) {
+            InfixtoPostfixGenerator.errors.add("Please add operands");
+        }
+
+        return stack.pop(); // Return the final result
+    }
+
+    // Method to check if a token is an operand
+    private static boolean isOperand(String token) {
+        try {
+            Long.parseLong(token);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    // Method to check if a token is an operator
+    private static boolean isOperator(String token) {
+        return token.length() == 1 && "+-*/^".contains(token);
+    }
+
+    // Method to check if op1 has a higher precedence than op2
+    private static boolean hasHigherPrecedence(char op1, char op2) {
+        int precedence1 = getOperatorPrecedence(op1);
+        int precedence2 = getOperatorPrecedence(op2);
+
+        return precedence1 > precedence2 || (precedence1 == precedence2 && op1 != '^');
+    }
+
+    // Method to get the precedence level of an operator
+    private static int getOperatorPrecedence(char operator) {
+        return switch (operator) {
+            case '+', '-' -> 1;
+            case '*', '/' -> 2;
+            case '^' -> 3;
+            default ->
+                    throw new IllegalArgumentException("Invalid operator: '" + operator + "'");
+        };
+    }
+
+    // Method to perform the specified arithmetic operation on operands
+    private static long performOperation(long a, long b, char operator) {
+        return switch (operator) {
+            case '+' -> a + b;
+            case '-' -> a - b;
+            case '*' -> a * b;
+            case '/' -> a / b;
+            case '^' -> (long) Math.pow(a, b);
+            default ->
+                    throw new IllegalArgumentException("Invalid operator: '" + operator + "'");
+        };
+    }
+}
