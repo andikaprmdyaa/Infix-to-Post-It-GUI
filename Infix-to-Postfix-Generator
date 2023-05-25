@@ -1,0 +1,114 @@
+package TP04;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class InfixtoPostfixGenerator extends JPanel {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    private final JTextField INPUTFIELD;
+    private final JLabel POSTFIXLABEL;
+    private final JLabel RESULTLABEL;
+    private final JLabel ERRORLABEL;
+    public static List<String> errors = new ArrayList<>();
+
+    public InfixtoPostfixGenerator() {
+        setLayout(new GridLayout(4, 2));
+
+        // Label for displaying the postfix expression
+        JLabel POSTFIX = new JLabel("Postfix Expression: ");
+
+        // Label for displaying the result
+        JLabel RESULT = new JLabel("Result: ");
+
+        // Label for displaying errors
+        JLabel ERROR = new JLabel("Error: ");
+
+        // Label for entering the infix expression
+        JLabel INFIXEXPRESSION = new JLabel("Enter Infix Expression: ");
+
+        // Input field for entering the infix expression
+        INPUTFIELD = new JTextField(20);
+
+        // Label for displaying the generated postfix expression
+        POSTFIXLABEL = new JLabel("-");
+
+        // Label for displaying the evaluated result
+        RESULTLABEL = new JLabel("-");
+
+        // Label for displaying the errors
+        ERRORLABEL = new JLabel("[]");
+
+        // Add components to the panel
+        add(INFIXEXPRESSION);
+        add(INPUTFIELD);
+        add(RESULT);
+        add(RESULTLABEL);
+        add(POSTFIX);
+        add(POSTFIXLABEL);
+        add(ERROR);
+        add(ERRORLABEL);
+
+        // Set background colors
+        INPUTFIELD.setBackground(Color.CYAN);
+        setBackground(Color.LIGHT_GRAY);
+
+        // Add a key listener to the input field
+        INPUTFIELD.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // Unused event
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                // Unused event
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                // Check if the Enter key is pressed
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    // Retrieve the input from the input field
+                    String input = INPUTFIELD.getText().trim();
+
+                    // Clear the list of errors
+                    errors.clear();
+
+                    // Variables for storing the generated postfix expression and the evaluated result
+                    String postfix = "";
+                    long result = 0;
+
+                    try {
+                        // Convert the infix expression to postfix
+                        postfix = PostfixAlgorithm.transformToPostfix(input);
+                        
+                        // Evaluate the postfix expression
+                        result = PostfixAlgorithm.evaluatePostfixExpression(postfix);
+                    } catch (IllegalArgumentException ex) {
+                        // Handle exceptions related to invalid expressions
+                        errors.add(ex.getMessage());
+                    } catch (Exception ex) {
+                        // Handle other types of exceptions
+                        errors.add("There is an error occurred.");
+                    }
+
+                    // Display the generated postfix expression
+                    POSTFIXLABEL.setText(postfix);
+                    
+                    // Display the evaluated result
+                    RESULTLABEL.setText(String.valueOf(result));
+                    
+                    // Display the errors, if any
+                    ERRORLABEL.setText(errors.toString());
+                }
+            }
+        });
+    }
+}
